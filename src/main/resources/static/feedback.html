@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Returns &amp; Feedback — Sri Devi Modern Rice Mill</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/styles.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="nav-root"></div>
+    <main class="container py-4 fade-in" style="max-width: 640px">
+      <h1 class="h3 mb-2">Returns &amp; feedback</h1>
+      <p class="text-muted small mb-4">Request a return with a reason, rate your experience (1–5 stars), and leave feedback.</p>
+      <div id="gate" class="alert alert-warning d-none">Please <a href="/customer-login.html">sign in with your phone</a> to submit.</div>
+      <form id="fb" class="card shadow border-0 p-4 d-none" novalidate>
+        <div class="mb-3">
+          <label class="form-label" for="orderId">Order</label>
+          <select class="form-select" id="orderId" required></select>
+          <div class="invalid-feedback">Choose an order.</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="returnReason">Return reason (optional)</label>
+          <textarea class="form-control" id="returnReason" rows="2" maxlength="1000" placeholder="Damaged bag, wrong item, etc."></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Rating (1–5)</label>
+          <div class="d-flex gap-2 flex-wrap" id="stars">
+            <button type="button" class="btn btn-outline-warning star" data-v="1"><i class="bi bi-star"></i></button>
+            <button type="button" class="btn btn-outline-warning star" data-v="2"><i class="bi bi-star"></i></button>
+            <button type="button" class="btn btn-outline-warning star" data-v="3"><i class="bi bi-star"></i></button>
+            <button type="button" class="btn btn-outline-warning star" data-v="4"><i class="bi bi-star"></i></button>
+            <button type="button" class="btn btn-outline-warning star" data-v="5"><i class="bi bi-star"></i></button>
+          </div>
+          <input type="hidden" id="rating" name="rating" required />
+          <div class="text-danger small d-none" id="rateErr">Select a star rating.</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="comments">Feedback</label>
+          <textarea class="form-control" id="comments" rows="3" maxlength="2000" placeholder="Tell us how we did…"></textarea>
+        </div>
+        <div id="msg" class="alert d-none"></div>
+        <button type="submit" class="btn btn-success">Submit</button>
+      </form>
+    </main>
+    <div id="footer-root"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/layout.js"></script>
+    <script>
+      let ratingVal = 0;
+      document.querySelectorAll(".star").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          ratingVal = +btn.dataset.v;
+          document.getElementById("rating").value = ratingVal;
+          document.querySelectorAll(".star").forEach((b, i) => {
+            const on = i < ratingVal;
+            b.classList.toggle("btn-warning", on);
+            b.classList.toggle("btn-outline-warning", !on);
+            b.querySelector("i").className = on ? "bi bi-star-fill" : "bi bi-star";
+          });
+          document.getElementById("rateErr").classList.add("d-none");
+        });
+      });
+
+      async function init() {
+        const me = await fetch("/api/auth/me", { credentials: "same-origin" }).then((r) => r.json());
+        if (!me.authenticated || me.role !== "ROLE_USER") {
+          document.getElementById("gate").classList.remove("d-none");
+          return;
+        }
+        const r = await fetch("/api/orders/mine", { credentials: "same-origin" });
+        const orders = await r.json();
+        const sel = document.getElementById("orderId");
+        sel.innerHTML = "";
+        if (!orders.length) {
+          sel.innerHTML = '<option value="">No orders yet</option>';
+        } else {
+          orders.forEach((o) => {
+            const opt = document.createElement("option");
+            opt.value = o.id;
+            opt.textContent = "#" + o.id + " — " + o.status;
+            sel.appendChild(opt);
+          });
+        }
+        document.getElementById("fb").classList.remove("d-none");
+      }
+
+      document.getElementById("fb").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const msg = document.getElementById("msg");
+        msg.classList.add("d-none");
+        if (!document.getElementById("orderId").value) {
+          form.classList.add("was-validated");
+          return;
+        }
+        if (!ratingVal) {
+          document.getElementById("rateErr").classList.remove("d-none");
+          return;
+        }
+        const body = {
+          orderId: +document.getElementById("orderId").value,
+          rating: ratingVal,
+          comments: document.getElementById("comments").value.trim() || null,
+          returnReason: document.getElementById("returnReason").value.trim() || null,
+        };
+        const r = await fetch("/api/feedback", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          msg.textContent = data.error || "Could not submit.";
+          msg.className = "alert alert-danger";
+        } else {
+          msg.textContent = data.message || "Submitted.";
+          msg.className = "alert alert-success";
+        }
+        msg.classList.remove("d-none");
+      });
+
+      document.addEventListener("DOMContentLoaded", init);
+    </script>
+  </body>
+</html>

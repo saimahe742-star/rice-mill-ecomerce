@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="16" fill="#e8eef5"/>
+  <ellipse cx="100" cy="125" rx="45" ry="55" fill="#f4d03f" stroke="#c9a227" stroke-width="3"/>
+  <rect x="82" y="35" width="36" height="55" rx="6" fill="#87ceeb" stroke="#4a90c2" stroke-width="2"/>
+  <rect x="88" y="28" width="24" height="12" rx="3" fill="#6bb3d9"/>
+  <text x="100" y="132" text-anchor="middle" font-size="14" fill="#6b4e0a" font-family="Segoe UI,sans-serif">OIL</text>
+</svg>

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin — Sri Devi Modern Rice Mill</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/styles.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="nav-root"></div>
+    <main class="container py-4 fade-in">
+      <h1 class="h3 mb-4">Admin dashboard</h1>
+      <div id="deny" class="alert alert-danger d-none">You need an admin account. <a href="/login.html?next=/admin.html">Sign in</a> as admin.</div>
+      <div id="app" class="d-none">
+        <ul class="nav nav-tabs mb-3" role="tablist">
+          <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabOrders" type="button">Orders</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabProducts" type="button">Products</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabUsers" type="button">Users</button>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="tabOrders">
+            <div class="table-responsive shadow-sm rounded bg-white">
+              <table class="table table-admin table-sm align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Placed</th>
+                    <th>Customer &amp; delivery</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Received</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="orderRows"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="tabProducts">
+            <div class="card border-0 shadow-sm mb-3">
+              <div class="card-body">
+                <h5 class="card-title">Add / edit product</h5>
+                <form id="pform" class="row g-2">
+                  <input type="hidden" id="pid" />
+                  <div class="col-md-4">
+                    <input type="text" class="form-control" id="pname" placeholder="Name" required />
+                  </div>
+                  <div class="col-md-2">
+                    <input type="number" step="0.01" min="0.01" class="form-control" id="pprice" placeholder="Price" required />
+                  </div>
+                  <div class="col-md-2">
+                    <input type="number" step="0.01" min="0.01" class="form-control" id="porigprice" placeholder="Orig Price (Optional)" />
+                  </div>
+                  <div class="col-md-2">
+                    <input type="number" min="0" class="form-control" id="pstock" placeholder="Stock qty" required />
+                  </div>
+                  <div class="col-md-2">
+                    <select class="form-select" id="pcat" required>
+                      <option value="Rice">Rice</option>
+                      <option value="Oils">Oils</option>
+                      <option value="Staples">Staples</option>
+                    </select>
+                  </div>
+                  <div class="col-md-9">
+                    <input type="text" class="form-control" id="pimg" placeholder="Image URL/Path (optional)" />
+                  </div>
+                  <div class="col-md-3">
+                    <button type="submit" class="btn btn-success w-100" id="psave">Save</button>
+                  </div>
+                  <div class="col-12">
+                    <textarea class="form-control" id="pdesc" rows="2" maxlength="2000" placeholder="Description (shown to customers, 2 lines on shop)"></textarea>
+                  </div>
+                </form>
+                <button type="button" class="btn btn-link btn-sm px-0" id="pnew">Clear form (new product)</button>
+              </div>
+            </div>
+            <div class="table-responsive shadow-sm rounded bg-white">
+              <table class="table table-admin table-sm align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Image</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="prodRows"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="tabUsers">
+            <div class="card border-0 shadow-sm mb-3">
+              <div class="card-body">
+                <h5 class="card-title">Edit user</h5>
+                <form id="uform" class="row g-2 align-items-end">
+                  <input type="hidden" id="uid" />
+                  <div class="col-md-3">
+                    <label class="form-label small mb-0" for="uname">Name</label>
+                    <input type="text" class="form-control" id="uname" placeholder="Name" />
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label small mb-0" for="uemail">Email</label>
+                    <input type="email" class="form-control" id="uemail" placeholder="Email" />
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label small mb-0" for="urole">Role</label>
+                    <select class="form-select" id="urole">
+                      <option value="ROLE_USER">Customer</option>
+                      <option value="ROLE_ADMIN">Admin</option>
+                    </select>
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label small mb-0" for="unewpw">New password</label>
+                    <input type="password" class="form-control" id="unewpw" placeholder="Optional" autocomplete="new-password" />
+                  </div>
+                  <div class="col-md-2">
+                    <button type="submit" class="btn btn-success w-100" id="usave">Save user</button>
+                  </div>
+                </form>
+                <button type="button" class="btn btn-link btn-sm px-0" id="unew">Clear (pick from table)</button>
+                <p class="small text-muted mb-0 mt-2" id="umsg"></p>
+              </div>
+            </div>
+            <div class="table-responsive shadow-sm rounded bg-white">
+              <table class="table table-admin table-sm align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="userRows"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <div id="footer-root"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/layout.js"></script>
+    <script>
+      async function requireAdmin() {
+        const me = await fetch("/api/auth/me", { credentials: "same-origin" }).then((r) => r.json());
+        if (!me.authenticated || me.role !== "ROLE_ADMIN") {
+          document.getElementById("deny").classList.remove("d-none");
+          return false;
+        }
+        document.getElementById("app").classList.remove("d-none");
+        return true;
+      }
+
+      async function loadOrders() {
+        const r = await fetch("/api/admin/orders", { credentials: "same-origin" });
+        if (!r.ok) return;
+        const list = await r.json();
+        const tb = document.getElementById("orderRows");
+        tb.innerHTML = "";
+        list.forEach((o) => {
+          const tr = document.createElement("tr");
+          const placed = new Date(o.createdAt).toLocaleString();
+          tr.innerHTML = `
+            <td>${o.id}</td>
+            <td class="text-nowrap small">${placed}</td>
+            <td>
+              <div class="small">
+                <strong>${o.customerName}</strong><br/>
+                <span class="text-muted">${o.customerEmail}</span><br/>
+                <span class="text-muted">Account phone: ${o.customerPhone || "—"}</span><br/>
+                <span class="text-muted">Recipient: ${o.recipientName || "-"}</span><br/>
+                <span class="text-muted">Phone: ${o.deliveryPhone || "-"}</span><br/>
+                <span class="text-muted">Address: ${o.deliveryAddress || "-"}, ${o.deliveryPincode || ""}</span><br/>
+                <span class="text-muted">Landmark: ${o.deliveryLandmark || "-"}</span>
+              </div>
+            </td>
+            <td>₹${Number(o.totalPrice).toFixed(0)}</td>
+            <td>
+              <select class="form-select form-select-sm st" data-id="${o.id}">
+                <option value="PENDING">Placed</option>
+                <option value="SHIPPED">Shipped</option>
+                <option value="DELIVERED">Delivered</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+            </td>
+            <td><input type="checkbox" class="form-check-input rcv" data-id="${o.id}" ${o.itemReceived ? "checked" : ""} /></td>
+            <td>
+              <button type="button" class="btn btn-sm btn-outline-primary up" data-id="${o.id}">Update</button>
+              <button type="button" class="btn btn-sm btn-outline-danger del" data-id="${o.id}">Delete</button>
+            </td>`;
+          tr.querySelector(".st").value = o.status;
+          tb.appendChild(tr);
+        });
+
+        tb.querySelectorAll(".up").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const id = btn.dataset.id;
+            const row = btn.closest("tr");
+            const status = row.querySelector(".st").value;
+            const itemReceived = row.querySelector(".rcv").checked;
+            await fetch("/api/admin/orders/" + id, {
+              method: "PATCH",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status, itemReceived }),
+            });
+            loadOrders();
+          });
+        });
+        tb.querySelectorAll(".del").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            if (!confirm("Delete this order?")) return;
+            await fetch("/api/admin/orders/" + btn.dataset.id, { method: "DELETE", credentials: "same-origin" });
+            loadOrders();
+          });
+        });
+      }
+
+      async function loadProducts() {
+        const r = await fetch("/api/products", { credentials: "same-origin" });
+        const list = await r.json();
+        const tb = document.getElementById("prodRows");
+        tb.innerHTML = "";
+        list.forEach((p) => {
+          const tr = document.createElement("tr");
+          const origPriceStr = p.originalPrice ? ` <del class="text-muted small">₹${Number(p.originalPrice).toFixed(0)}</del>` : "";
+          tr.innerHTML = `
+            <td>${p.id}</td>
+            <td>${p.name}</td>
+            <td><span class="badge bg-secondary">${p.category || "Rice"}</span></td>
+            <td>₹${Number(p.price).toFixed(0)}${origPriceStr}</td>
+            <td>${p.stockQuantity != null ? p.stockQuantity : 0}</td>
+            <td class="text-center">${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.name}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;" title="${p.imageUrl}">` : "—"}</td>
+            <td>
+              <button type="button" class="btn btn-sm btn-outline-secondary ed" data-id="${p.id}">Edit</button>
+              <button type="button" class="btn btn-sm btn-outline-danger pdel" data-id="${p.id}">Delete</button>
+            </td>`;
+          tb.appendChild(tr);
+        });
+        tb.querySelectorAll(".ed").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const id = +btn.dataset.id;
+            const p = list.find((x) => x.id === id);
+            document.getElementById("pid").value = p.id;
+            document.getElementById("pname").value = p.name;
+            document.getElementById("pprice").value = p.price;
+            document.getElementById("porigprice").value = p.originalPrice || "";
+            document.getElementById("pcat").value = p.category || "Rice";
+            document.getElementById("pstock").value = p.stockQuantity != null ? p.stockQuantity : 0;
+            document.getElementById("pimg").value = p.imageUrl || "";
+            document.getElementById("pdesc").value = p.description || "";
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          });
+        });
+        tb.querySelectorAll(".pdel").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            if (!confirm("Delete product?")) return;
+            await fetch("/api/admin/products/" + btn.dataset.id, { method: "DELETE", credentials: "same-origin" });
+            loadProducts();
+          });
+        });
+      }
+
+      document.getElementById("pnew").addEventListener("click", () => {
+        document.getElementById("pform").reset();
+        document.getElementById("pid").value = "";
+      });
+
+      async function loadUsers() {
+        const r = await fetch("/api/admin/users", { credentials: "same-origin" });
+        if (!r.ok) return;
+        const list = await r.json();
+        const tb = document.getElementById("userRows");
+        tb.innerHTML = "";
+        list.forEach((u) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${u.id}</td>
+            <td>${u.name}</td>
+            <td class="small">${u.email}</td>
+            <td><span class="badge bg-secondary">${u.role === "ROLE_ADMIN" ? "Admin" : "Customer"}</span></td>
+            <td>
+              <button type="button" class="btn btn-sm btn-outline-secondary ued" data-id="${u.id}">Edit</button>
+              <button type="button" class="btn btn-sm btn-outline-danger udel" data-id="${u.id}">Delete</button>
+            </td>`;
+          tb.appendChild(tr);
+        });
+        tb.querySelectorAll(".ued").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const id = btn.dataset.id;
+            const ur = await fetch("/api/admin/users/" + id, { credentials: "same-origin" });
+            if (!ur.ok) return;
+            const u = await ur.json();
+            document.getElementById("uid").value = u.id;
+            document.getElementById("uname").value = u.name;
+            document.getElementById("uemail").value = u.email;
+            document.getElementById("urole").value = u.role;
+            document.getElementById("unewpw").value = "";
+            document.getElementById("umsg").textContent = "";
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          });
+        });
+        tb.querySelectorAll(".udel").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            if (!confirm("Delete this user? Fails if they have orders/feedback or are the last admin.")) return;
+            const dr = await fetch("/api/admin/users/" + btn.dataset.id, { method: "DELETE", credentials: "same-origin" });
+            if (!dr.ok) {
+              const err = await dr.json().catch(() => ({}));
+              alert(err.error || "Delete failed");
+            }
+            loadUsers();
+          });
+        });
+      }
+
+      document.getElementById("unew").addEventListener("click", () => {
+        document.getElementById("uform").reset();
+        document.getElementById("uid").value = "";
+        document.getElementById("umsg").textContent = "";
+      });
+
+      document.getElementById("uform").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const id = document.getElementById("uid").value;
+        const msg = document.getElementById("umsg");
+        msg.textContent = "";
+        if (!id) {
+          msg.textContent = "Select a user with Edit first.";
+          return;
+        }
+        const body = {
+          name: document.getElementById("uname").value.trim(),
+          email: document.getElementById("uemail").value.trim(),
+          role: document.getElementById("urole").value,
+        };
+        const pw = document.getElementById("unewpw").value;
+        if (pw.length > 0) {
+          if (pw.length < 6) {
+            msg.textContent = "Password must be at least 6 characters.";
+            return;
+          }
+          body.newPassword = pw;
+        }
+        const ur = await fetch("/api/admin/users/" + id, {
+          method: "PATCH",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await ur.json().catch(() => ({}));
+        if (!ur.ok) {
+          msg.textContent = data.error || "Update failed";
+          return;
+        }
+        msg.textContent = "Saved.";
+        document.getElementById("unewpw").value = "";
+        loadUsers();
+      });
+
+      document.getElementById("pform").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const id = document.getElementById("pid").value;
+        const body = {
+          name: document.getElementById("pname").value.trim(),
+          price: +document.getElementById("pprice").value,
+          originalPrice: document.getElementById("porigprice").value ? +document.getElementById("porigprice").value : null,
+          category: document.getElementById("pcat").value || "Rice",
+          imageUrl: document.getElementById("pimg").value.trim().replace(new RegExp(`^${window.location.origin}`), '') || null,
+          description: document.getElementById("pdesc").value.trim() || null,
+          stockQuantity: parseInt(document.getElementById("pstock").value, 10) || 0,
+        };
+        if (id) {
+          await fetch("/api/admin/products/" + id, {
+            method: "PUT",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+        } else {
+          await fetch("/api/admin/products", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+        }
+        document.getElementById("pform").reset();
+        document.getElementById("pid").value = "";
+        loadProducts();
+      });
+
+      document.getElementById("pimg").addEventListener("input", (e) => {
+        const val = e.target.value.trim();
+        const origin = window.location.origin;
+        if (val.startsWith(origin)) {
+          e.target.value = val.substring(origin.length);
+        }
+      });
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        if (!(await requireAdmin())) return;
+        await loadOrders();
+        await loadProducts();
+        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const t = btn.getAttribute("data-bs-target");
+            setTimeout(() => {
+              if (t === "#tabProducts") loadProducts();
+              if (t === "#tabOrders") loadOrders();
+              if (t === "#tabUsers") loadUsers();
+            }, 0);
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

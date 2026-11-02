@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Products — Sri Devi Modern Rice Mill</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/styles.css" rel="stylesheet" />
+    <link rel="icon" type="image/svg+xml" href="/images/sample-rice.svg" />
+  </head>
+  <body>
+    <div id="nav-root"></div>
+    <main class="container py-4 fade-in">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h1 class="h3 mb-0">Our products</h1>
+        <span class="badge bg-success fs-6" id="cartBadge" title="Items in cart">0 items</span>
+      </div>
+      <p class="text-muted small mb-4">
+        <i class="bi bi-stars text-warning"></i> Tap a product to add it to your cart. Stock shows how many units you can order.
+      </p>
+
+      <!-- Category and Search Controls -->
+      <div class="row mb-4 g-3 align-items-center">
+        <div class="col-md-8 d-flex flex-wrap gap-2" id="categoryFilters">
+          <button class="btn btn-sm btn-outline-success active" data-cat="All">All Items</button>
+          <button class="btn btn-sm btn-outline-success" data-cat="Rice">Rice Varieties</button>
+          <button class="btn btn-sm btn-outline-success" data-cat="Oils">Cold-Pressed Oils</button>
+          <button class="btn btn-sm btn-outline-success" data-cat="Staples">Staples</button>
+        </div>
+        <div class="col-md-4">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control border-start-0" id="searchBar" placeholder="Search products..." />
+          </div>
+        </div>
+      </div>
+
+      <div id="alert" class="alert alert-info d-none"></div>
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4" id="grid"></div>
+    </main>
+    <div id="footer-root"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/spark.js"></script>
+    <script src="/js/layout.js"></script>
+    <script>
+      async function refreshCartCount() {
+        const r = await fetch("/api/cart", { credentials: "same-origin" });
+        if (!r.ok) return;
+        const data = await r.json();
+        const n = data.items.reduce((s, i) => s + i.quantity, 0);
+        document.getElementById("cartBadge").textContent = n + " items";
+      }
+
+      function showAlert(text) {
+        const a = document.getElementById("alert");
+        a.textContent = text;
+        a.classList.remove("d-none");
+        setTimeout(() => a.classList.add("d-none"), 2200);
+      }
+
+      async function addProduct(card, productId, ev) {
+        playSpark(card, ev.clientX, ev.clientY);
+        try {
+          const r = await fetch("/api/cart/add", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ productId, quantity: 1 }),
+          });
+          const errBody = await r.json().catch(() => ({}));
+          if (!r.ok) {
+            showAlert(errBody.error || "Could not add to cart.");
+            return;
+          }
+          await refreshCartCount();
+          showAlert("Added to cart — open Cart to review or checkout.");
+        } catch {
+          showAlert("Could not add to cart. Please try again.");
+        }
+      }
+
+      function escapeHtml(s) {
+        const d = document.createElement("div");
+        d.textContent = s;
+        return d.innerHTML;
+      }
+
+      let allProducts = [];
+      let activeCategory = "All";
+      let searchQuery = "";
+
+      function renderProducts() {
+        const grid = document.getElementById("grid");
+        grid.innerHTML = "";
+
+        const filtered = allProducts.filter(p => {
+          const matchesCategory = activeCategory === "All" || (p.category && p.category.toLowerCase() === activeCategory.toLowerCase());
+          const matchesSearch = p.name.toLowerCase().includes(searchQuery) || (p.description && p.description.toLowerCase().includes(searchQuery));
+          return matchesCategory && matchesSearch;
+        });
+
+        if (filtered.length === 0) {
+          grid.innerHTML = `<div class="col-12 text-center py-5"><p class="text-muted">No products found matching your criteria.</p></div>`;
+          return;
+        }
+
+        filtered.forEach((p) => {
+          const col = document.createElement("div");
+          col.className = "col";
+          const card = document.createElement("div");
+          const outOfStock = (p.stockQuantity || 0) <= 0;
+          card.className = "card product-card h-100 shadow-sm" + (outOfStock ? " opacity-75" : "");
+          const imgUrl = p.imageUrl || "/images/sample-rice.svg";
+          const desc = (p.description && String(p.description).trim()) || "Quality product from Sri Devi Modern Rice Mill.";
+          const stock = p.stockQuantity != null ? p.stockQuantity : 0;
+
+          // Discount computation
+          let discountBadgeHtml = "";
+          let priceHtml = `₹${Number(p.price).toFixed(0)}`;
+          if (p.originalPrice && Number(p.originalPrice) > Number(p.price)) {
+            const discPercent = Math.round(((Number(p.originalPrice) - Number(p.price)) / Number(p.originalPrice)) * 100);
+            if (discPercent > 0) {
+              discountBadgeHtml = `<div class="discount-badge">${discPercent}% OFF</div>`;
+            }
+            priceHtml = `₹${Number(p.price).toFixed(0)} <del class="text-muted small fw-normal ms-1">₹${Number(p.originalPrice).toFixed(0)}</del>`;
+          }
+
+          card.innerHTML = `
+            ${discountBadgeHtml}
+            <div class="product-img-wrap">
+              <img src="${imgUrl}" alt="${escapeHtml(p.name)}" loading="lazy" />
+            </div>
+            <div class="card-body">
+              <h5 class="card-title fs-6">${escapeHtml(p.name)}</h5>
+              <p class="product-desc-2lines mb-2">${escapeHtml(desc)}</p>
+              <p class="small text-muted mb-1">Available to order: <strong>${stock}</strong></p>
+              <p class="card-text fw-bold text-success mb-2">${priceHtml}</p>
+              <span class="btn btn-sm btn-brand stretched-link">${outOfStock ? "Out of stock" : "Add to cart"}</span>
+            </div>`;
+
+          if (!outOfStock) {
+            card.addEventListener("click", (ev) => {
+              ev.preventDefault();
+              addProduct(card, p.id, ev);
+            });
+          } else {
+            card.style.cursor = "default";
+          }
+          col.appendChild(card);
+          grid.appendChild(col);
+        });
+      }
+
+      async function load() {
+        const r = await fetch("/api/products", { credentials: "same-origin" });
+        allProducts = await r.json();
+        renderProducts();
+        await refreshCartCount();
+
+        // Setup filter click listeners
+        document.querySelectorAll("#categoryFilters button").forEach(btn => {
+          btn.addEventListener("click", () => {
+            document.querySelectorAll("#categoryFilters button").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            activeCategory = btn.dataset.cat;
+            renderProducts();
+          });
+        });
+
+        // Setup search input listener
+        document.getElementById("searchBar").addEventListener("input", (e) => {
+          searchQuery = e.target.value.toLowerCase().trim();
+          renderProducts();
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", load);
+    </script>
+    
+    <!-- Floating WhatsApp Support Button -->
+    <a href="https://wa.me/919965749999?text=Hi!%20I%20have%20a%20question%20about%20my%20order%20from%20Sri%20Devi%20Modern%20Rice%20Mill." 
+       target="_blank" 
+       class="whatsapp-float shadow" 
+       title="Chat with us on WhatsApp">
+      <i class="bi bi-whatsapp"></i>
+    </a>
+  </body>
+</html>
